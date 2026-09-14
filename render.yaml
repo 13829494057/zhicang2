@@ -1,0 +1,28 @@
+# Render 一键部署蓝图
+# 使用方法：仓库推到 GitHub 后，在 Render 选 New > Blueprint，指向本仓库即可。
+services:
+  - type: web
+    name: fav-archaeology
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: node src/server.js
+    healthCheckPath: /api/health
+    envVars:
+      # 以下四个标记为 sync:false，需要在 Render 控制台手动填入，
+      # 避免凭证以明文进入 Git 仓库。
+      - key: ZHIHU_APP_ID
+        sync: false
+      - key: ZHIHU_APP_KEY
+        sync: false
+      - key: ZHIHU_ACCESS_SECRET
+        sync: false
+      - key: ZHIHU_REDIRECT_URI
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0

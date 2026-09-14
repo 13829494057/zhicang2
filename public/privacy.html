@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>隐私说明 · 收藏夹考古</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="/">
+    <span class="brand-mark">考</span>
+    收藏夹考古
+  </a>
+  <div class="user-area"></div>
+</header>
+
+<main class="wrap" style="max-width:720px">
+  <div class="card">
+    <h1 style="margin-top:0;font-size:24px">隐私说明</h1>
+    <p style="color:var(--sub)">本页说明「收藏夹考古」在你授权后会读取什么、不会做什么，以及数据如何存放。</p>
+
+    <h2 class="section">我们读取什么</h2>
+    <p>只有在你主动点击知乎登录并完成授权后，我们才会代表你调用知乎开放平台的以下只读接口：</p>
+    <ul>
+      <li><strong>收藏夹列表</strong>（<code>/user/favlists</code>）—— 收藏夹名称、描述、公开状态</li>
+      <li><strong>收藏夹内容</strong>（<code>/user/favlist_contents</code>）—— 标题、摘要、链接、收藏时间</li>
+      <li><strong>近期收藏</strong>（<code>/user/collections</code>）—— 最近一批收藏内容</li>
+      <li><strong>关注的人</strong>（<code>/user/followees</code>）—— 昵称、头像、简介</li>
+      <li><strong>创作内容</strong>（<code>/user/contents</code>）—— 标题、摘要、互动计数</li>
+      <li><strong>账号基础信息</strong>（<code>openapi.zhihu.com/user</code>）—— 昵称、头像、简介</li>
+    </ul>
+    <p style="color:var(--muted);font-size:13.5px">以上接口返回你在知乎授权范围内的收藏夹内容（<strong>包含私密收藏夹</strong>）、关注与创作数据。报告只展示给你本人，会话结束即清除。</p>
+
+    <h2 class="section">我们不做什么</h2>
+    <ul>
+      <li>不读取私信、浏览记录、草稿或任何非公开内容</li>
+      <li>不在你的账号下发布、点赞、评论、关注或收藏（本应用不含任何写接口）</li>
+      <li>不修改、不重命名、不删除你的收藏夹</li>
+      <li>不做跨用户数据聚合或对比</li>
+      <li>不把你的数据提供给第三方</li>
+    </ul>
+
+    <h2 class="section">数据怎么存</h2>
+    <ul>
+      <li><strong>不写数据库。</strong>读取到的数据只在服务端内存中完成计算，随即返回给你的浏览器</li>
+      <li>你的登录状态以随机会话标识保存在 HttpOnly Cookie 中，<strong>授权令牌不会下发到浏览器</strong></li>
+      <li>会话在 <strong>1 小时</strong>后自动过期清除，你也可以随时点「退出」立即清除</li>
+      <li>服务重启后所有会话数据一并消失</li>
+    </ul>
+
+    <h2 class="section">如何撤销</h2>
+    <p>你可以随时在
+      <a href="https://www.zhihu.com/settings/account" target="_blank" rel="noopener">知乎账号设置 → 第三方授权管理</a>
+      中撤销对本应用的授权。撤销后本应用将无法再读取你的任何数据。</p>
+
+    <p style="margin-top:32px">
+      <a href="/">← 返回首页</a>
+    </p>
+  </div>
+</main>
+
+</body>
+</html>

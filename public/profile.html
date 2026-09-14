@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>个人主页 · 收藏夹考古</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="/">
+    <span class="brand-mark">考</span>
+    收藏夹考古
+  </a>
+  <div class="user-area" id="userArea"></div>
+</header>
+
+<main class="wrap">
+  <!-- 上：用户信息 -->
+  <section id="profileHead"></section>
+
+  <!-- 下：关注 / 创作 -->
+  <div class="tabs" id="tabs" hidden>
+    <button class="tab active" data-tab="followees">我关注的人</button>
+    <button class="tab" data-tab="contents">我的创作</button>
+  </div>
+
+  <div id="panel"></div>
+  <div class="loadmore" id="loadmore"></div>
+</main>
+
+<script type="module">
+import {
+  getMe, apiGet, renderUserArea, renderError, skeleton,
+  escapeHtml, fallbackAvatar, fmtDate, typeLabel,
+} from '/common.js';
+
+const $ = (id) => document.getElementById(id);
+
+const state = {
+  tab: 'followees',
+  items: [],
+  offset: 0,
+  nextOffset: null,
+  isEnd: false,
+  loading: false,
+  totals: null,
+};
+
+init();
+
+async function init() {
+  const me = await getMe();
+  renderUserArea($('userArea'), me);
+
+  if (!me.loggedIn) {
+    $('profileHead').innerHTML = `<div class="state">
+      <strong>需要登录后查看</strong>
+      <div style="margin-top:14px">
+        <a class="btn" href="/auth/zhihu/start?return_to=%2Fprofile">用知乎账号登录</a>
+      </div>
+    </div>`;
+    return;
+  }
+
+  renderHead(me.profile);
+  $('tabs').hidden = false;
+
+  $('tabs').querySelectorAll('.tab').forEach((btn) => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  await switchTab('followees');
+}
+
+function renderHead(p) {
+  const avatar = p.avatarPath || fallbackAvatar(p.fullname);
+  const genderText = { male: '男', female: '女' }[p.gender] || '未公开';
+
+  $('profileHead').innerHTML = `
+    <div class="profile-head">
+      <img src="${escapeHtml(avatar)}" alt="${escapeHtml(p.fullname)}"
+           onerror="this.src='${fallbackAvatar(p.fullname)}'">
+      <div style="flex:1;min-width:0">
+        <h1 class="profile-name">${escapeHtml(p.fullname || '知乎用户')}</h1>
+        ${p.headline ? `<p class="profile-headline">${escapeHtml(p.headline)}</p>` : ''}
+        ${p.description ? `<p class="profile-desc">${escapeHtml(p.description)}</p>` : ''}
+        <div class="profile-meta">
+          <span>性别：${genderText}</span>
+          ${p.hashId ? `<span>ID <code>${escapeHtml(p.hashId)}</code></span>` : ''}
+          ${p.url ? `<a href="${escapeHtml(p.url)}" target="_blank" rel="noopener">知乎主页 ↗</a>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+async function switchTab(tab) {
+  state.tab = tab;
+  state.items = [];
+  state.offset = 0;
+  state.nextOffset = null;
+  state.isEnd = false;
+  state.totals = null;
+
+  $('tabs').querySelectorAll('.tab').forEach((b) => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+
+  $('panel').innerHTML = skeleton(3);
+  $('loadmore').innerHTML = '';
+  await loadMore(true);
+}
+
+async function loadMore(reset = false) {
+  if (state.loading || (!reset && state.isEnd)) return;
+  state.loading = true;
+  if (!reset) $('loadmore').innerHTML = '<button class="btn ghost" disabled>加载中…</button>';
+
+  const offset = reset ? 0 : state.nextOffset ?? state.offset;
+  const url = state.tab === 'followees'
+    ? `/api/followees?offset=${offset}&limit=20`
+    : `/api/contents?type=all&offset=${offset}&limit=20&sort=ts&order=desc`;
+
+  try {
+    const res = await apiGet(url);
+    state.items = reset ? res.items : state.items.concat(res.items);
+    state.isEnd = res.paging.isEnd;
+    state.nextOffset = res.paging.nextOffset;
+    state.totals = res.paging.totals;
+    render(res.paging.incomplete);
+  } catch (err) {
+    renderError($('panel'), err);
+    $('loadmore').innerHTML = '';
+  } finally {
+    state.loading = false;
+  }
+}
+
+function render(incomplete) {
+  if (!state.items.length) {
+    $('panel').innerHTML = `<div class="state">
+      <strong>${state.tab === 'followees' ? '还没有关注任何人' : '还没有公开的创作内容'}</strong>
+      接口只返回公开范围内的数据
+    </div>`;
+    $('loadmore').innerHTML = '';
+    return;
+  }
+
+  const notice = incomplete
+    ? `<div class="notice">分页信息不完整，已停止自动加载，当前展示的是已获取到的部分。</div>`
+    : '';
+
+  const countText = state.totals ? `共 ${state.totals}` : `${state.items.length}`;
+
+  if (state.tab === 'followees') {
+    $('panel').innerHTML = notice + `
+      <h2 class="section">关注的人 <span class="count">${countText}</span></h2>
+      <div class="people">` + state.items.map((u) => `
+        <div class="person">
+          <img src="${escapeHtml(u.avatarUrl || fallbackAvatar(u.fullname))}"
+               alt="${escapeHtml(u.fullname)}"
+               onerror="this.src='${fallbackAvatar(u.fullname)}'">
+          <div style="min-width:0">
+            <a class="person-name" href="${escapeHtml(u.url)}" target="_blank" rel="noopener">
+              ${escapeHtml(u.fullname || '知乎用户')}
+            </a>
+            ${u.headline ? `<div class="person-headline">${escapeHtml(u.headline)}</div>` : ''}
+            <div class="meta" style="margin-top:6px">
+              <span>${u.followerCount} 粉丝</span>
+            </div>
+          </div>
+        </div>`).join('') + '</div>';
+  } else {
+    $('panel').innerHTML = notice + `
+      <h2 class="section">我的创作 <span class="count">${countText}</span></h2>
+      <div class="list">` + state.items.map((it) => `
+        <article class="item">
+          <a class="item-title" href="${escapeHtml(it.url)}" target="_blank" rel="noopener">
+            ${escapeHtml(it.title || '(无标题)')}
+          </a>
+          ${it.summary ? `<p class="item-summary">${escapeHtml(it.summary)}</p>` : ''}
+          <div class="meta">
+            <span class="tag">${typeLabel(it.contentType)}</span>
+            <span>${fmtDate(it.createdAt)}</span>
+            <span>${it.likeCount} 赞同</span>
+            <span>${it.commentCount} 评论</span>
+            <span>${it.favoriteCount} 收藏</span>
+          </div>
+        </article>`).join('') + '</div>';
+  }
+
+  $('loadmore').innerHTML = state.isEnd
+    ? (state.items.length > 6 ? '<span style="color:#8590a6;font-size:13px">已经到底了</span>' : '')
+    : '<button class="btn ghost" id="moreBtn">加载更多</button>';
+
+  const btn = $('moreBtn');
+  if (btn) btn.addEventListener('click', () => loadMore(false));
+}
+</script>
+</body>
+</html>

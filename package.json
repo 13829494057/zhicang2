@@ -1,0 +1,19 @@
+{
+  "name": "fav-archaeology",
+  "version": "1.0.0",
+  "description": "收藏夹考古 · 知乎 OAuth 登录 + 收藏夹数据获取与渲染",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5"
+  }
+}
